@@ -3,6 +3,15 @@ const cors = require('cors');
 const path = require('path');
 require('dotenv').config();
 
+if (process.env.DATABASE_URL && process.env.DATABASE_URL.includes('channel_binding=require')) {
+    process.env.DATABASE_URL = process.env.DATABASE_URL
+        .replace(/([?&])channel_binding=require(&?)/, (m, sep, tail) => {
+            if (tail === '&') return sep;
+            return '';
+        })
+        .replace(/[?&]$/, '');
+}
+
 const electionRoutes = require('./routes/electionRoutes');
 const candidateRoutes = require('./routes/candidateRoutes');
 const voterRoutes = require('./routes/voterRoutes');
