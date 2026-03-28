@@ -42,7 +42,26 @@ function AdminDashboard() {
 
   useEffect(() => {
     fetchElections();
+    try {
+      if (typeof window !== 'undefined' && window.location?.hostname && window.location.hostname !== 'localhost') {
+        if (String(API_URL).includes('localhost')) {
+          ui.toast({
+            type: 'warning',
+            title: 'API não configurada',
+            message: 'Configure VITE_API_URL e VITE_API_ORIGIN no deploy para o sistema funcionar.',
+            durationMs: 6000,
+          });
+        }
+      }
+    } catch (_) {}
   }, []);
+
+  const getApiErrorMessage = (error, fallback) => {
+    const apiError = error?.response?.data?.error;
+    if (apiError) return String(apiError);
+    if (!error?.response) return 'Não foi possível conectar à API. Verifique se o backend está no ar e as variáveis da Vercel.';
+    return fallback;
+  };
 
   const fetchElections = async () => {
     setLoading(true);
@@ -51,6 +70,7 @@ function AdminDashboard() {
       setElections(response.data);
     } catch (error) {
       console.error('Error fetching elections', error);
+      ui.toast({ type: 'error', title: 'Erro', message: getApiErrorMessage(error, 'Erro ao carregar eleições.') });
     } finally {
       setLoading(false);
     }
@@ -72,7 +92,7 @@ function AdminDashboard() {
       fetchElections();
       ui.toast({ type: 'success', title: 'Eleição criada', message: 'A eleição foi criada com sucesso.' });
     } catch (error) {
-      ui.toast({ type: 'error', title: 'Erro', message: 'Erro ao criar eleição.' });
+      ui.toast({ type: 'error', title: 'Erro', message: getApiErrorMessage(error, 'Erro ao criar eleição.') });
     }
   };
 
